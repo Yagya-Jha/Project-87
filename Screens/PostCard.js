@@ -5,6 +5,7 @@ import * as Font from 'expo-font';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { RFValue } from 'react-native-responsive-fontsize';
 import Ionicons from 'react-native-vector-icons/Ionicons'
+import firebase from 'firebase';
 
 let custom_font = {'Bubblegum-Sans':require('../assets/fonts/BubblegumSans-Regular.ttf')}
 
@@ -16,6 +17,14 @@ export default class PostCard extends React.Component{
             lightTheme: true,
         };
     }
+
+    fetchUser = async ()=>{
+        let theme;
+        await firebase.database().ref("/users/"+firebase.auth().currentUser.uid).on("value",(snapshot)=>{
+            theme = snapshot.val().current_theme;
+            this.setState({lightTheme: theme==="light"?true:false});
+        })
+     }
     async loadFonts(){
         await Font.loadAsync(custom_font);
         this.setState({fontsLoaded: true});
@@ -23,6 +32,7 @@ export default class PostCard extends React.Component{
 
     componentDidMount(){
         this.loadFonts();
+        this.fetchUser();
     }
 
     render(){
@@ -32,21 +42,21 @@ export default class PostCard extends React.Component{
         else{
             return(
                 <TouchableOpacity style = {styles.container} onPress = {()=>{this.props.navigation.navigate('PostScreen', {post: this.props.story})}}>
-                    <View style = {styles.cardContainer}>
-                        <View style = {styles.profile}>
+                    <View style = {this.state.lightTheme?styles.cardContainerLight : styles.cardContainer}>
+                        <View style = {this.state.lightTheme?styles.profileLight:styles.profile}>
                         <Image source = {require('../assets/profile_img.png')} style = {styles.profileImage} />
-                        <Text style = {[styles.titleText, {marginLeft: 60, bottom: 50}]}>
+                        <Text style = {[this.state.lightTheme?styles.titleTextLight:styles.titleText, {marginLeft: 60, bottom: 50}]}>
                                 {this.props.post.author}
                         </Text>
                         </View>
                         <Image source = {require('../assets/post.jpeg')} style = {styles.postImg} />
                         <View style = {styles.titleContainer}>
-                            <Text style = {styles.titleText}>
+                            <Text style = {this.state.lightTheme?styles.titleTextLight:styles.titleText}>
                                 {this.props.post.title}
                             </Text>
                             
-                            <Text style = {styles.descriptionText}>
-                                {this.props.post.description}
+                            <Text style = {this.state.lightTheme?styles.captionTextLight:styles.captionText}>
+                                {this.props.post.caption}
                             </Text>
                         </View>
                         <View style = {styles.actionContainer}>
@@ -80,6 +90,11 @@ const styles = StyleSheet.create({
         height: 60,
         borderRadius: 20,
         backgroundColor: '#272C59'
+    },
+    profileLight:{
+        height: 60,
+        borderRadius: 20,
+        backgroundColor: '#bfc2e0'
     },
     appIcon: {
       flex: 0.3,
@@ -117,6 +132,24 @@ const styles = StyleSheet.create({
         height: undefined,
     },
     cardContainerLight: {
+        marginTop: 10,
+        marginBottom: 20,
+        marginLeft: 20,
+        marginRight: 20,
+        backgroundColor: "#d5d8f0",
+        padding: 10,
+        borderRadius: 20,
+        height: undefined,
+        shadowColor: 'rgb(0,0,0)',
+        shadowOffset: {
+            width: 3,
+            height: 3,
+        },
+        shadowOpacity: 1,
+        shadowRadius: 5,
+        elevation: 2,
+      },
+    cardContainerLight: {
         marginTop: -20,
         marginBottom: 20,
         marginLeft: 20,
@@ -142,7 +175,7 @@ const styles = StyleSheet.create({
     likeButton:{
         width: RFValue(150),
         height:RFValue(40),
-        bottom: 50,
+        bottom: 12,
         justifyContent:"center",
         alignItems:"center",
         borderRadius: RFValue(30),
@@ -155,13 +188,13 @@ const styles = StyleSheet.create({
         fontSize:RFValue(25),
         marginLeft: RFValue(5),
     },
-    descriptionText:{
+    captionText:{
         color:"white",
         fontFamily:"Bubblegum-Sans",
         fontSize:RFValue(30),
         paddingTop: RFValue(10)
     },
-    descriptionTextLight:{
+    captionTextLight:{
         color:"black",
         fontFamily:"Bubblegum-Sans",
         fontSize:RFValue(30),
